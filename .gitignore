@@ -1,0 +1,6 @@
+*.pdf
+*.iml
+*.idea
+*.class
+out
+*.xml
