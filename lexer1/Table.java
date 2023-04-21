@@ -18,7 +18,8 @@ public class Table {
         map.put(18, "{");
         map.put(19, "}");
         map.put(20, "NUM");
-        map.put(21, "ID");
+        map.put(21, "IDENTIFIER");
+        map.put(22, "WS");
     }
 
     public static void showTable() {
