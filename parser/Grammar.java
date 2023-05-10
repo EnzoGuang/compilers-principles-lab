@@ -102,7 +102,7 @@ public class Grammar {
     }
 
     /* 消除间接左递归 */
-    public void elminateIndirectLeftRecursive() {
+    public void eliminateIndirectLeftRecursive() {
         ArrayList<String> vnOrder = confirmVnOrder();
         for (int i = 0; i < vnOrder.size(); i++) {
             /* 获得当前非终结符的所有候选式 */
@@ -126,19 +126,61 @@ public class Grammar {
         }
     }
 
+    /* 消除直接左递归 */
+    public void eliminateDirectLeftRecursive() {
+        /* 按照非终结符的顺序进行消除直接左递归 */
+        ArrayList<String> vnOrder = confirmVnOrder();
+        for (int i = 0; i < vnOrder.size(); i++) {
+            ArrayList<String> candidate = getCandidate(vnOrder.get(i));
+            int originalCandidateSize = candidate.size();
+            ArrayList<String> recursivePrefix = new ArrayList<>(); //包含有直接左递归的候选式
+            ArrayList<String> other = new ArrayList<>(); //包含没有直接左递归的候选式
+            for (int j = 0; j < originalCandidateSize; j++) {
+                String currentCandidate = candidate.get(j);
+                char firstChar = currentCandidate.charAt(0);
+                /* 判断当前候选式的第一个字符与当前产生式的左部的字符是否相等，判断是否直接左递归 */
+                if (firstChar == vnOrder.get(i).charAt(0)) {
+                    /** 如果是左递归把当前候选式加入包含左递归候选式的列表中
+                     *  并把候选式的会产生左递归的非终结符先替换为空，为以后提供方便
+                     */
+                    recursivePrefix.add(currentCandidate.replaceAll(vnOrder.get(i), ""));
+                } else {
+                    other.add(currentCandidate);
+                }
+            }
+            if (recursivePrefix.size() != 0){
+                ArrayList<String> newCandidate = new ArrayList<>();
+                for (int j = 0; j < other.size(); j++) {
+                    String temp = other.get(j);
+                    newCandidate.add(temp + vnOrder.get(i) + '\'');
+                }
+                grammar.put(vnOrder.get(i), newCandidate);
+                ArrayList<String> newVnCandidate = new ArrayList<>();
+                for (int j = 0; j < recursivePrefix.size(); j++) {
+                    newVnCandidate.add(recursivePrefix.get(j) + vnOrder.get(i) + '\'');
+                }
+                newVnCandidate.add("ε");
+                grammar.put(vnOrder.get(i) + '\'', newVnCandidate);
+                /* 把新产生的非终结符加入vn集合中 */
+                vn.add(vnOrder.get(i) + '\'');
+            }
+        }
+    }
+
     public static void main(String[] args) {
-        String[] input1 = {"E->E+T|T", "T->T*F|F", "F->(E)|i"};
-        String[] input2 = {"M->MaH|H", "H->b(M)|(M)|b"};
-        String[] input3 = {"S->(XE)|F)", "X->E)|F]", "E->A", "F->A", "A->ε"};
-        String[] input4 = {"C->Ac|c", "B->Cb|b", "A->Ba|a"};
+//        String[] input1 = {"E->E+T|T", "T->T*F|F", "F->(E)|i"};
+//        String[] input2 = {"M->MaH|H", "H->b(M)|(M)|b"};
+//        String[] input3 = {"S->(XE)|F)", "X->E)|F]", "E->A", "F->A", "A->ε"};
+//        String[] input4 = {"C->Ac|c", "B->Cb|b", "A->Ba|a"};
         String[] input5 = {"R->Sa|a", "Q->Rb|b", "S->Qc|c"};
-        Grammar grammar = new Grammar(input4);
+        Grammar grammar = new Grammar(input5);
         grammar.printGrammar();
         System.out.println("VN: " + grammar.getVN());
         System.out.println("VT: " + grammar.getVT());
         System.out.println("candidate: " + grammar.getCandidate("B"));
         System.out.println("orderOfVn: " + grammar.confirmVnOrder());
-        grammar.elminateIndirectLeftRecursive();
+        grammar.eliminateIndirectLeftRecursive();
+        grammar.eliminateDirectLeftRecursive();
         grammar.printGrammar();
     }
 }
