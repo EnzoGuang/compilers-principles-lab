@@ -108,7 +108,8 @@ public class Lexer {
                 /* 最后一个条件是要满足lexeme的内容不为"+"，且此时的peek为"=";如果此时lexeme内容为"+",
                    peek内容为"="不进入这个语句，进入下一个else，判断是否为++或者+=.
                  */
-            } else if(peek == '{' || peek == '}' || peek == '*' || (!lexeme.equals("+") && peek == '=')) {
+            } else if(peek == '{' || peek == '}' || peek == '*' ||
+                    (!lexeme.equals("+") && peek == '=')) {
                 if (!lexeme.equals("")) {
                     return lexeme;
                 }
