@@ -186,18 +186,43 @@ public class Grammar {
         ArrayList<String> candidate = getCandidate(vn);
         ArrayList<Character> vnFirstSet = vnFirst.get(vn);
         ArrayList<Character> update;
+        int sizeOfEmpty; //候选式中连续的非终结符的first集含有空的个数
+        boolean isCurrentVnFirstEmpty; //判断当前候选式所处的非终结符的first集中是否含空
         for (String temp: candidate) {
-            char firstChar = temp.charAt(0);
-            if (!isVN(String.valueOf(firstChar))) {
-                if (!vnFirstSet.contains(firstChar)) {
-                    vnFirstSet.add(firstChar);
-                }
-            } else {
-                update = getVnFirst(String.valueOf(firstChar));
-                for (Character first: update) {
-                    if (!vnFirstSet.contains(first)) {
-                        vnFirstSet.add(first);
+            sizeOfEmpty = 0;
+            isCurrentVnFirstEmpty = false;
+            int index = 0;
+            for (int i = 0; i < temp.length(); i++) {
+                char firstChar = temp.charAt(index);
+                /* 当前字符是终结符 */
+                if (!isVN(String.valueOf(firstChar))) {
+                    if (!vnFirstSet.contains(firstChar)) {
+                        vnFirstSet.add(firstChar);
+                        break;
                     }
+                } else {
+                    /* 当前字符是非终结符 */
+                    update = getVnFirst(String.valueOf(firstChar));
+                    for (Character content: update) {
+                        if (!vnFirstSet.contains(content) && content != 'ε') {
+                            vnFirstSet.add(content);
+                        }
+                        if (content == 'ε') {
+                            index++;
+                            isCurrentVnFirstEmpty = true;
+                        }
+                    }
+                    if (isCurrentVnFirstEmpty) {
+                        sizeOfEmpty ++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            /** 如果非终结符含空的个数和当前候选式的长度相等的话，ε入first集合 */
+            if (temp.length() == sizeOfEmpty) {
+                if (!vnFirstSet.contains('ε')) {
+                    vnFirstSet.add('ε');
                 }
             }
         }
