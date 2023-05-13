@@ -8,6 +8,7 @@ public class Grammar {
     private LinkedHashSet<String> vn = new LinkedHashSet<>();
     private LinkedHashSet<String> vt = new LinkedHashSet<>();
     private LinkedHashMap<String, ArrayList<String>> grammar = new LinkedHashMap<>();
+    private LinkedHashMap<String, ArrayList<Character>> vnFirst = new LinkedHashMap<>();
 
     /* 接收一个字符串数组，获得文法. */
     public Grammar(String[] grammarContent) {
@@ -148,7 +149,7 @@ public class Grammar {
                     other.add(currentCandidate);
                 }
             }
-            if (recursivePrefix.size() != 0){
+            if (recursivePrefix.size() != 0) {
                 ArrayList<String> newCandidate = new ArrayList<>();
                 for (int j = 0; j < other.size(); j++) {
                     String temp = other.get(j);
@@ -167,20 +168,39 @@ public class Grammar {
         }
     }
 
-    public static void main(String[] args) {
-//        String[] input1 = {"E->E+T|T", "T->T*F|F", "F->(E)|i"};
-//        String[] input2 = {"M->MaH|H", "H->b(M)|(M)|b"};
-//        String[] input3 = {"S->(XE)|F)", "X->E)|F]", "E->A", "F->A", "A->ε"};
-//        String[] input4 = {"C->Ac|c", "B->Cb|b", "A->Ba|a"};
-        String[] input5 = {"R->Sa|a", "Q->Rb|b", "S->Qc|c"};
-        Grammar grammar = new Grammar(input5);
-        grammar.printGrammar();
-        System.out.println("VN: " + grammar.getVN());
-        System.out.println("VT: " + grammar.getVT());
-        System.out.println("candidate: " + grammar.getCandidate("B"));
-        System.out.println("orderOfVn: " + grammar.confirmVnOrder());
-        grammar.eliminateIndirectLeftRecursive();
-        grammar.eliminateDirectLeftRecursive();
-        grammar.printGrammar();
+    /* 计算所有非终结符的first集合 */
+    public void getVnFirst() {
+        ArrayList<String> vnOrder = confirmVnOrder();
+        /* 初始化各个非终结符的first集(全为空) */
+        for (String temp: vnOrder) {
+            ArrayList<Character> first = new ArrayList<>();
+            vnFirst.put(temp, first);
+        }
+        for (String temp: vnOrder) {
+            getVnFirst(temp);
+        }
+    }
+
+    /* 计算非终结符vn的first集合，当中有递归调用 */
+    private ArrayList<Character> getVnFirst(String vn) {
+        ArrayList<String> candidate = getCandidate(vn);
+        ArrayList<Character> vnFirstSet = vnFirst.get(vn);
+        ArrayList<Character> update;
+        for (String temp: candidate) {
+            char firstChar = temp.charAt(0);
+            if (!isVN(String.valueOf(firstChar))) {
+                if (!vnFirstSet.contains(firstChar)) {
+                    vnFirstSet.add(firstChar);
+                }
+            } else {
+                update = getVnFirst(String.valueOf(firstChar));
+                for (Character first: update) {
+                    if (!vnFirstSet.contains(first)) {
+                        vnFirstSet.add(first);
+                    }
+                }
+            }
+        }
+        return vnFirstSet;
     }
 }
