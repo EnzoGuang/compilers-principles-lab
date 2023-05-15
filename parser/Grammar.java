@@ -9,6 +9,7 @@ public class Grammar {
     private LinkedHashSet<String> vt = new LinkedHashSet<>();
     private LinkedHashMap<String, ArrayList<String>> grammar = new LinkedHashMap<>();
     private LinkedHashMap<String, ArrayList<Character>> vnFirst = new LinkedHashMap<>();
+    private LinkedHashMap<String, ArrayList<String>> vnFollow = new LinkedHashMap<>();
 
     /* 接收一个字符串数组，获得文法. */
     public Grammar(String[] grammarContent) {
@@ -72,6 +73,14 @@ public class Grammar {
         } else {
             return grammar.get(vn);
         }
+    }
+
+    public ArrayList<Character> getFirstOfVn(String vn) {
+        return vnFirst.get(vn);
+    }
+
+    public ArrayList<String> getFollowOfVn(String vn) {
+        return vnFollow.get(vn);
     }
 
     /* 识别并添加终结符 */
@@ -169,7 +178,7 @@ public class Grammar {
     }
 
     /* 计算所有非终结符的first集合 */
-    public void getVnFirst() {
+    public void getFirst() {
         ArrayList<String> vnOrder = confirmVnOrder();
         /* 初始化各个非终结符的first集(全为空) */
         for (String temp: vnOrder) {
@@ -177,12 +186,12 @@ public class Grammar {
             vnFirst.put(temp, first);
         }
         for (String temp: vnOrder) {
-            getVnFirst(temp);
+            getFirst(temp);
         }
     }
 
     /* 计算非终结符vn的first集合，当中有递归调用 */
-    private ArrayList<Character> getVnFirst(String vn) {
+    private ArrayList<Character> getFirst(String vn) {
         ArrayList<String> candidate = getCandidate(vn);
         ArrayList<Character> vnFirstSet = vnFirst.get(vn);
         ArrayList<Character> update;
@@ -202,7 +211,7 @@ public class Grammar {
                     }
                 } else {
                     /* 当前字符是非终结符 */
-                    update = getVnFirst(String.valueOf(firstChar));
+                    update = getFirst(String.valueOf(firstChar));
                     for (Character content: update) {
                         if (!vnFirstSet.contains(content) && content != 'ε') {
                             vnFirstSet.add(content);
@@ -228,4 +237,100 @@ public class Grammar {
         }
         return vnFirstSet;
     }
+
+    public void getFollow() {
+        ArrayList<String> vnOrder = confirmVnOrder();
+        for (int i = 0; i < vnOrder.size(); i++) {
+            ArrayList<String> temp = new ArrayList<>();
+            if (i == 0) {
+                temp.add(String.valueOf('#'));
+            }
+            vnFollow.put(vnOrder.get(i), temp);
+        }
+        for (String temp: vnOrder) {
+            getFollow(temp);
+        }for (String temp: vnOrder) {
+            getFollow(temp);
+        }
+    }
+
+    public boolean getFollow(String vn) {
+        boolean isChange = false;
+        ArrayList<String> candidate = getCandidate(vn);
+        for (int i = 0; i < candidate.size(); i++) {
+            String currentCandidate = candidate.get(i);
+            if (currentCandidate.equals('ε')) {
+                break;
+            }
+            for (int j = 0; j < currentCandidate.length();) {
+                int emptySize = 0;
+                String currentVn = currentCandidate.charAt(j) + "";
+                currentVn = isQuote(j, currentCandidate);
+                if ( !isVN(currentVn)) {
+                    break;
+                }
+                ArrayList<String> currentFollow = getFollowOfVn(currentVn);
+                for (int k = j + currentVn.length(); k < currentCandidate.length();) {
+                    String nextVn = isQuote(k, currentCandidate);
+                    if (isVN(nextVn)) {
+                        boolean isEmpty = addVnFirstToFollow(nextVn, currentFollow);
+                        isChange = true;
+                        if (isEmpty) {
+                            emptySize += nextVn.length();
+                        }
+                    } else {
+                        if (!currentFollow.contains(nextVn)) {
+                            currentFollow.add(nextVn);
+                            isChange = true;
+                        }
+                        break;
+                    }
+                    k += nextVn.length();
+                }
+                if (j + currentVn.length() - 1 +  emptySize == currentCandidate.length() - 1) {
+                    addLeftFollowToAnother(getFollowOfVn(vn), currentFollow);
+                    isChange = true;
+                }
+                j += currentVn.length();
+            }
+        }
+        return isChange;
+    }
+
+    /* 判断当前非终结符是否跟着',例如E' */
+    public String isQuote(int currentIndex, String candidate) {
+        String result = "" + candidate.charAt(currentIndex);
+        if (currentIndex + 1 <= candidate.length() - 1) {
+            if (candidate.charAt(currentIndex + 1) == '\'') {
+                result += '\'';
+            }
+        }
+        return result;
+    }
+
+    /* 将非终结符vn的First集合除去空后再全部加入Follow集合中，并返回First集合是否含空 */
+    public boolean addVnFirstToFollow(String vn, ArrayList<String> follow) {
+        ArrayList<Character> first = getFirst(vn);
+        boolean isEmpty = false;
+        for (Character temp: first) {
+            if (follow.isEmpty() && !follow.contains(first)) {
+                if (temp != 'ε') {
+                    follow.add(String.valueOf(temp));
+                } else {
+                    isEmpty = true;
+                }
+            }
+        }
+        return isEmpty;
+    }
+
+    /* 将产生式左部非终结符的Follow集加入右部当前非终结符的Follow集 */
+    public void addLeftFollowToAnother(ArrayList<String> from, ArrayList<String> to) {
+        for (String temp: from) {
+            if (!to.contains(temp)) {
+                to.add(temp);
+            }
+        }
+    }
+
 }
