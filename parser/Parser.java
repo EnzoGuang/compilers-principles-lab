@@ -178,7 +178,7 @@ public class Parser {
     }
 
     /* 计算所有非终结符的first集合 */
-    public void getFirst() {
+    public void calculateFirst() {
         ArrayList<String> vnOrder = confirmVnOrder();
         /* 初始化各个非终结符的first集(全为空) */
         for (String temp: vnOrder) {
@@ -186,12 +186,12 @@ public class Parser {
             vnFirst.put(temp, first);
         }
         for (String temp: vnOrder) {
-            getFirst(temp);
+            calculateFirst(temp);
         }
     }
 
     /* 计算非终结符vn的first集合，当中有递归调用 */
-    private ArrayList<Character> getFirst(String vn) {
+    private ArrayList<Character> calculateFirst(String vn) {
         ArrayList<String> candidate = getCandidate(vn);
         ArrayList<Character> vnFirstSet = vnFirst.get(vn);
         ArrayList<Character> update;
@@ -211,7 +211,7 @@ public class Parser {
                     }
                 } else {
                     /* 当前字符是非终结符 */
-                    update = getFirst(String.valueOf(firstChar));
+                    update = calculateFirst(String.valueOf(firstChar));
                     for (Character content: update) {
                         if (!vnFirstSet.contains(content) && content != 'ε') {
                             vnFirstSet.add(content);
@@ -239,7 +239,7 @@ public class Parser {
     }
 
     /* 获得所有非终结符的Follow集 */
-    public void getFollow() {
+    public void calculateFollow() {
         ArrayList<String> vnOrder = confirmVnOrder();
         for (int i = 0; i < vnOrder.size(); i++) {
             ArrayList<String> temp = new ArrayList<>();
@@ -249,14 +249,14 @@ public class Parser {
             vnFollow.put(vnOrder.get(i), temp);
         }
         for (String temp: vnOrder) {
-            getFollow(temp);
+            calculateFollow(temp);
         }
         for (String temp: vnOrder) {
-            getFollow(temp);
+            calculateFollow(temp);
         }
     }
 
-    private void getFollow(String vn) {
+    private void calculateFollow(String vn) {
         ArrayList<String> candidate = getCandidate(vn);
         for (int i = 0; i < candidate.size(); i++) {
             String currentCandidate = candidate.get(i);
@@ -308,7 +308,7 @@ public class Parser {
 
     /* 将非终结符vn的First集合除去空后再全部加入Follow集合中，并返回First集合是否含空 */
     private boolean addVnFirstToFollow(String vn, ArrayList<String> follow) {
-        ArrayList<Character> first = getFirst(vn);
+        ArrayList<Character> first = calculateFirst(vn);
         boolean isEmpty = false;
         for (Character temp: first) {
             if (!follow.contains(String.valueOf(temp))) {
