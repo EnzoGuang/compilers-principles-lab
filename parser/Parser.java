@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 
-public class Grammar {
+public class Parser {
     private LinkedHashSet<String> vn = new LinkedHashSet<>();
     private LinkedHashSet<String> vt = new LinkedHashSet<>();
     private LinkedHashMap<String, ArrayList<String>> grammar = new LinkedHashMap<>();
@@ -12,7 +12,7 @@ public class Grammar {
     private LinkedHashMap<String, ArrayList<String>> vnFollow = new LinkedHashMap<>();
 
     /* 接收一个字符串数组，获得文法. */
-    public Grammar(String[] grammarContent) {
+    public Parser(String[] grammarContent) {
         String[] candidate;
         for (String temp: grammarContent) {
             /* 通过正则表达式匹配"->"符号 */
@@ -84,7 +84,7 @@ public class Grammar {
     }
 
     /* 识别并添加终结符 */
-    public void addVT() {
+    private void addVT() {
         for (String key: grammar.keySet()) {
             for (String value: grammar.get(key)) {
                 for (int i = 0; i < value.length(); i++) {
@@ -102,7 +102,7 @@ public class Grammar {
     }
 
     /* 判断字符x是否在某个候选式中 */
-    public int getIndexOfChar(char x, ArrayList<String> vn) {
+    private int getIndexOfChar(char x, ArrayList<String> vn) {
         for (int i = 0; i < vn.size(); i++) {
             if (vn.get(i).contains(String.valueOf(x))) {
                 return i;
@@ -238,6 +238,7 @@ public class Grammar {
         return vnFirstSet;
     }
 
+    /* 获得所有非终结符的Follow集 */
     public void getFollow() {
         ArrayList<String> vnOrder = confirmVnOrder();
         for (int i = 0; i < vnOrder.size(); i++) {
@@ -249,39 +250,38 @@ public class Grammar {
         }
         for (String temp: vnOrder) {
             getFollow(temp);
-        }for (String temp: vnOrder) {
+        }
+        for (String temp: vnOrder) {
             getFollow(temp);
         }
     }
 
-    public boolean getFollow(String vn) {
-        boolean isChange = false;
+    private void getFollow(String vn) {
         ArrayList<String> candidate = getCandidate(vn);
         for (int i = 0; i < candidate.size(); i++) {
             String currentCandidate = candidate.get(i);
             if (currentCandidate.equals('ε')) {
-                break;
+                continue;
             }
             for (int j = 0; j < currentCandidate.length();) {
                 int emptySize = 0;
                 String currentVn = currentCandidate.charAt(j) + "";
                 currentVn = isQuote(j, currentCandidate);
-                if ( !isVN(currentVn)) {
-                    break;
+                if (!isVN(currentVn)) {
+                    j += currentVn.length();
+                    continue;
                 }
                 ArrayList<String> currentFollow = getFollowOfVn(currentVn);
                 for (int k = j + currentVn.length(); k < currentCandidate.length();) {
                     String nextVn = isQuote(k, currentCandidate);
                     if (isVN(nextVn)) {
                         boolean isEmpty = addVnFirstToFollow(nextVn, currentFollow);
-                        isChange = true;
                         if (isEmpty) {
                             emptySize += nextVn.length();
                         }
                     } else {
                         if (!currentFollow.contains(nextVn)) {
                             currentFollow.add(nextVn);
-                            isChange = true;
                         }
                         break;
                     }
@@ -289,16 +289,14 @@ public class Grammar {
                 }
                 if (j + currentVn.length() - 1 +  emptySize == currentCandidate.length() - 1) {
                     addLeftFollowToAnother(getFollowOfVn(vn), currentFollow);
-                    isChange = true;
                 }
                 j += currentVn.length();
             }
         }
-        return isChange;
     }
 
     /* 判断当前非终结符是否跟着',例如E' */
-    public String isQuote(int currentIndex, String candidate) {
+    private String isQuote(int currentIndex, String candidate) {
         String result = "" + candidate.charAt(currentIndex);
         if (currentIndex + 1 <= candidate.length() - 1) {
             if (candidate.charAt(currentIndex + 1) == '\'') {
@@ -309,11 +307,11 @@ public class Grammar {
     }
 
     /* 将非终结符vn的First集合除去空后再全部加入Follow集合中，并返回First集合是否含空 */
-    public boolean addVnFirstToFollow(String vn, ArrayList<String> follow) {
+    private boolean addVnFirstToFollow(String vn, ArrayList<String> follow) {
         ArrayList<Character> first = getFirst(vn);
         boolean isEmpty = false;
         for (Character temp: first) {
-            if (follow.isEmpty() && !follow.contains(first)) {
+            if (!follow.contains(String.valueOf(temp))) {
                 if (temp != 'ε') {
                     follow.add(String.valueOf(temp));
                 } else {
@@ -325,12 +323,11 @@ public class Grammar {
     }
 
     /* 将产生式左部非终结符的Follow集加入右部当前非终结符的Follow集 */
-    public void addLeftFollowToAnother(ArrayList<String> from, ArrayList<String> to) {
+    private void addLeftFollowToAnother(ArrayList<String> from, ArrayList<String> to) {
         for (String temp: from) {
             if (!to.contains(temp)) {
                 to.add(temp);
             }
         }
     }
-
 }
