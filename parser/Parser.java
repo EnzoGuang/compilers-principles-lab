@@ -10,6 +10,7 @@ public class Parser {
     private LinkedHashMap<String, ArrayList<String>> grammar = new LinkedHashMap<>();
     private LinkedHashMap<String, ArrayList<Character>> vnFirst = new LinkedHashMap<>();
     private LinkedHashMap<String, ArrayList<String>> vnFollow = new LinkedHashMap<>();
+    private LinkedHashMap<String, ArrayList<String>> vnSelect = new LinkedHashMap<>();
 
     /* 接收一个字符串数组，获得文法. */
     public Parser(String[] grammarContent) {
@@ -328,6 +329,53 @@ public class Parser {
             if (!to.contains(temp)) {
                 to.add(temp);
             }
+        }
+    }
+
+    /* 获得所有候选式的Select集 */
+    public void calculateSelect() {
+        ArrayList<String> vnOrder = confirmVnOrder();
+        for (String orderOfVn: vnOrder) {
+            ArrayList<String> grammarOfvn = getCandidate(orderOfVn);
+            for (String temp: grammarOfvn) {
+                ArrayList<String> content = new ArrayList<>();
+                char firstChar = temp.charAt(0);
+                if (isVN(String.valueOf(firstChar)) && firstChar != 'ε') {
+                    addFirstToSelect(content, String.valueOf(firstChar));
+                } else if (firstChar == 'ε') {
+                    addFollowToSelect(content, orderOfVn);
+                } else {
+                    addTerminateToSelect(content, String.valueOf(firstChar));
+                }
+                vnSelect.put(orderOfVn + "->" + temp, content);
+            }
+        }
+    }
+
+    /* 候选式右部第一个字符为非终结符，该非终结符的First集入Select集 */
+    private void addFirstToSelect(ArrayList<String> content, String vn) {
+        ArrayList<Character> temp = getFirstOfVn(vn);
+        for (Character t: temp) {
+            if (!content.contains(String.valueOf(t)) && t != 'ε') {
+                content.add(String.valueOf(t));
+            }
+        }
+    }
+
+    /* 候选式右部为空，添加产生式左部的Follow集入Select集 */
+    private void addFollowToSelect(ArrayList<String> content, String vn) {
+        ArrayList<String> temp = getFollowOfVn(vn);
+        for (String t: temp) {
+            if (!content.contains(t)) {
+                content.add(t);
+            }
+        }
+    }
+
+    /* 候选式右部第一个字符为终结符，终结符进Select集 */
+    private void addTerminateToSelect(ArrayList<String> content, String vn) {
+        if (!content.contains(vn)) {
+            content.add(vn);
         }
     }
 }
