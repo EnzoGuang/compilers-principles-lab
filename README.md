@@ -25,8 +25,8 @@
 
 # *This project needs patience to tackle some challenge, and very worthy.*
 These pictures show the time that I spent in this project. Recording by Wakatime
-![这是wakatime记录的时间](resource/timeRecordOfParser.png "wakatime")
-![这是wakatime记录的时间](resource/timeRecordOfParser2.png "wakatime")
+![这是wakatime记录的时间](resource/updateTimeRecord.png "wakatime")
+![这是wakatime记录的时间](resource/updateTimeRecord2.png "wakatime")
 
 
 

@@ -1,8 +1,21 @@
+/** 构造自上而下的非递归的语法分析器
+ *   求解算法步骤:
+ *  1.消除左递归(包括直接左递归和间接左递归)
+ *  2.求所有非终结符的First集
+ *  3.求所有非终结符的Follow集
+ *  4.求所有候选式的Select集
+ *  5.构建分析表
+ *  6.构建分析栈
+ *
+ * @author 杨光
+ * @date 2023/05/19
+ */
 package parser;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
+import java.util.ArrayDeque;
 
 public class Parser {
     private LinkedHashSet<String> vn = new LinkedHashSet<>();
@@ -11,6 +24,7 @@ public class Parser {
     private LinkedHashMap<String, ArrayList<Character>> vnFirst = new LinkedHashMap<>();
     private LinkedHashMap<String, ArrayList<String>> vnFollow = new LinkedHashMap<>();
     private LinkedHashMap<String, ArrayList<String>> vnSelect = new LinkedHashMap<>();
+    private ArrayDeque<String> analyzeStack = new ArrayDeque<>();
 
     /* 接收一个字符串数组，获得文法. */
     public Parser(String[] grammarContent) {
@@ -82,6 +96,17 @@ public class Parser {
 
     public ArrayList<String> getFollowOfVn(String vn) {
         return vnFollow.get(vn);
+    }
+
+    /* 得到所有vn的产生式,以A->B的形式*/
+    public ArrayList<String> getProduction(String vn) {
+        ArrayList<String> result = new ArrayList<>();
+        ArrayList<String> candidate = getCandidate(vn);
+        for (String content: candidate) {
+            result.add(vn + "->" + content);
+        }
+        return result;
+
     }
 
     /* 识别并添加终结符 */
@@ -223,7 +248,7 @@ public class Parser {
                         }
                     }
                     if (isCurrentVnFirstEmpty) {
-                        sizeOfEmpty ++;
+                        sizeOfEmpty++;
                     } else {
                         break;
                     }
@@ -376,6 +401,94 @@ public class Parser {
     private void addTerminateToSelect(ArrayList<String> content, String vn) {
         if (!content.contains(vn)) {
             content.add(vn);
+        }
+    }
+
+    /* 对输入串进行分析 */
+    public void analyzeProcess(String sentence) {
+        System.out.println("--------------------------------------------------");
+        System.out.printf("%-8s%-12s%-10s%s\n", "步骤", "分析栈", "余留输入串", "所用产生式");
+        sentence += "#";
+        int stepIndex = 1;
+        int indexSentence = 0;
+        analyzeStack.addFirst("#");
+        String startVn = confirmVnOrder().get(0);
+        analyzeStack.addFirst(startVn);
+        ArrayList<String> production = getProduction(startVn);
+        while (true/*!analyzeStack.peek().equals('#') && sentence.charAt(indexSentence) != '#'*/) {
+            /* 如果栈顶为非终结符，和输入串当前字符比较 */
+            if (!isVN(analyzeStack.peek())) {
+                if (analyzeStack.peek().equals(String.valueOf(sentence.charAt(indexSentence)))) {
+                    printStep(stepIndex, analyzeStack, sentence.substring(indexSentence), "");
+                    if (analyzeStack.peek().equals("#") && sentence.substring(indexSentence).equals("#")) {
+                        //System.out.println("Analyze success");
+                        break;
+                    } else {
+                        analyzeStack.removeFirst();
+                        stepIndex++;
+                        if (sentence.charAt(indexSentence) != '#') {
+                            indexSentence++;
+                        }
+                    }
+                } else {
+                    System.out.println("Analyze error!");
+                    break;
+                }
+            } else if (isVN(analyzeStack.peek())) {
+                production = getProduction(analyzeStack.peek());
+                int limit = 0;
+                for (String t: production) {
+                    ArrayList<String> selectSet = vnSelect.get(t);
+                    if (selectSet.contains(String.valueOf(sentence.charAt(indexSentence)))) {
+                        printStep(stepIndex, analyzeStack, sentence.substring(indexSentence), t);
+                        analyzeStack.removeFirst();
+                        String[] leftAndRight = t.split("->");
+                        reverseAdd(analyzeStack, leftAndRight[1]);
+                        limit++;
+                        stepIndex++;
+                        break;
+                    }
+                }
+                if (limit == 0) {
+                    System.out.println("Analyze error! Select Set not contain!");
+                    break;
+                }
+            }
+        }
+        System.out.println("Analyze success! congratulation!");
+    }
+
+    /* 以字符串形式获得分析栈的所有元素 */
+    private String getElementOfStack(ArrayDeque<String> analyzeStack) {
+        StringBuffer content = new StringBuffer();
+        for (String t: analyzeStack) {
+            content.insert(0, t);
+        }
+        return content.toString();
+    }
+
+    /* 打印每个步骤的信息，包括分析栈，使用的产生式 */
+    private void printStep(int stepIndex, ArrayDeque<String> analyzeStack, String sentence, String production) {
+        String content = getElementOfStack(analyzeStack);
+        System.out.printf("%-10d%-15s%-15s%s", stepIndex, content, sentence, production);
+        System.out.println();
+    }
+
+    /* 将产生式右部逆序加入分析栈中 */
+    private void reverseAdd(ArrayDeque<String> analyzeStack, String right) {
+        ArrayDeque<String> temp = new ArrayDeque<>();
+        for (int i = 0; i < right.length();) {
+            String currentVn = isQuote(i, right);
+            temp.addFirst(currentVn);
+            i += currentVn.length();
+        }
+        while (!temp.isEmpty()) {
+            String content = temp.peekFirst();
+            if (content.equals("ε")) {
+                temp.removeFirst();
+            } else {
+                analyzeStack.addFirst(temp.removeFirst());
+            }
         }
     }
 }
