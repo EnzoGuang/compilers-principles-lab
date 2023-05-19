@@ -1,4 +1,4 @@
-# 编译原理实验
+# 编译原理实验  [![wakatime](https://wakatime.com/badge/user/b06f1799-d59e-4d93-be43-644d6ec7f0fc/project/f3d92d3c-d791-456f-b169-2cdc68996234.svg)](https://wakatime.com/badge/user/b06f1799-d59e-4d93-be43-644d6ec7f0fc/project/f3d92d3c-d791-456f-b169-2cdc68996234)
 ## lab1 设计词法分析器
 > 词法分析器要求<br>
     关键字: int, if, for<br>
