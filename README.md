@@ -12,12 +12,12 @@
 
 ## lab2 设计非递归的语法分析器
 > 求解算法步骤:<br>
-> 1.消除左递归(包括直接左递归和间接左递归)<br> 
-> 2.求所有非终结符的First集<br> 
-> 3.求所有非终结符的Follow集<br>
-> 4.求所有候选式的Select集  
-> 5.构建分析表  
-> 6.构建分析栈  
+> - [x] 1.消除左递归(包括直接左递归和间接左递归)<br> 
+> - [x] 2.求所有非终结符的First集<br> 
+> - [x] 3.求所有非终结符的Follow集<br>
+> - [x] 4.求所有候选式的Select集  
+> - [x] 5.构建分析表  
+> - [x] 6.构建分析栈  
 
 ```
 源码在package parser中
@@ -27,8 +27,3 @@
 These pictures show the time that I spent in this project. Recording by Wakatime
 ![这是wakatime记录的时间](resource/updateTimeRecord.png "wakatime")
 ![这是wakatime记录的时间](resource/updateTimeRecord2.png "wakatime")
-
-
-
-
-

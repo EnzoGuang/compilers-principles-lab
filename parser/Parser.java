@@ -83,7 +83,7 @@ public class Parser {
     /* 得到参数vn的所有候选式，如果vn不是非终结符，程序报错 */
     public ArrayList<String> getCandidate(String vn) {
         if (!isVN(vn)) {
-            System.out.println("不是非终结符");
+            System.out.println(vn + "不是非终结符");
             return null;
         } else {
             return grammar.get(vn);
@@ -411,17 +411,18 @@ public class Parser {
         sentence += "#";
         int stepIndex = 1;
         int indexSentence = 0;
+        boolean flag = false;
         analyzeStack.addFirst("#");
         String startVn = confirmVnOrder().get(0);
         analyzeStack.addFirst(startVn);
         ArrayList<String> production = getProduction(startVn);
-        while (true/*!analyzeStack.peek().equals('#') && sentence.charAt(indexSentence) != '#'*/) {
+        while (true) {
             /* 如果栈顶为非终结符，和输入串当前字符比较 */
             if (!isVN(analyzeStack.peek())) {
                 if (analyzeStack.peek().equals(String.valueOf(sentence.charAt(indexSentence)))) {
                     printStep(stepIndex, analyzeStack, sentence.substring(indexSentence), "");
                     if (analyzeStack.peek().equals("#") && sentence.substring(indexSentence).equals("#")) {
-                        //System.out.println("Analyze success");
+                        flag = true;
                         break;
                     } else {
                         analyzeStack.removeFirst();
@@ -455,7 +456,10 @@ public class Parser {
                 }
             }
         }
-        System.out.println("Analyze success! congratulation!");
+        if (flag) {
+            System.out.println("Analyze success! Congratulation!");
+        }
+        System.out.println("--------------------------------------------------\n");
     }
 
     /* 以字符串形式获得分析栈的所有元素 */
@@ -470,8 +474,7 @@ public class Parser {
     /* 打印每个步骤的信息，包括分析栈，使用的产生式 */
     private void printStep(int stepIndex, ArrayDeque<String> analyzeStack, String sentence, String production) {
         String content = getElementOfStack(analyzeStack);
-        System.out.printf("%-10d%-15s%-15s%s", stepIndex, content, sentence, production);
-        System.out.println();
+        System.out.printf("%-10d%-15s%-15s%s\n", stepIndex, content, sentence, production);
     }
 
     /* 将产生式右部逆序加入分析栈中 */
